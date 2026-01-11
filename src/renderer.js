@@ -121,6 +121,16 @@ graphicArea.id = 'graphic-area';
 graphicArea.style.marginTop = '12px';
 document.body.appendChild(graphicArea);
 
+// add a test button to generate graphic from dummy data
+const testBtn = document.createElement('button');
+testBtn.id = 'test-graphic-btn';
+testBtn.textContent = 'Test Graphic (Dummy Data)';
+testBtn.style.display = 'block';
+testBtn.style.marginTop = '8px';
+testBtn.style.width = '100%';
+testBtn.style.maxWidth = '1008px';
+document.body.appendChild(testBtn);
+
 btn.addEventListener('click', async () => {
     btn.disabled = true;
     container.textContent = 'Loading...';
@@ -230,25 +240,48 @@ function charInitials(name) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
+// new helpers: map character -> asset filename and preload icon
+function cleanedIconBase(name) {
+    if (!name) return null;
+    // remove periods and spaces, keep ampersands and letters intact to match filenames like "MrGame&WatchHeadSSBM.png"
+    return name.replace(/\./g, '').replace(/\s+/g, '');
+}
+
+function loadCharacterIcon(character) {
+    return new Promise((resolve) => {
+        if (!character) return resolve(null);
+        const base = cleanedIconBase(character);
+        if (!base) return resolve(null);
+        const filename = `${base}HeadSSBM.png`;
+        // resolve relative to this module so Vite will handle the asset path
+        const url = new URL(`../assets/stockicons/${filename}`, import.meta.url).href;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+}
+
 // Generate graphic from the editable rows
-genBtn.addEventListener('click', () => {
+// refactor: single function that draws given entries (preloads icons)
+async function generateGraphic(entries) {
     graphicArea.innerHTML = '';
-    const rows = Array.from(container.querySelectorAll('.top8-row'));
-    if (!rows.length) {
-        graphicArea.innerText = 'No rows to generate from.';
+
+    // ensure entries is an array
+    if (!Array.isArray(entries) || !entries.length) {
+        graphicArea.innerText = 'No entries to generate from.';
         return;
     }
 
-    const entries = rows.map(r => {
-        const place = r.children[0]?.textContent?.replace('.', '')?.trim() || '';
-        const name = (r.querySelector('input')?.value || '').trim() || 'Unknown';
-        const character = (r.querySelector('select')?.value || '').trim();
-        return { place, name, character };
-    });
+    // preload icons for each entry (attach as entry.icon)
+    await Promise.all(entries.map(async (e) => {
+        e.icon = await loadCharacterIcon(e.character);
+    }));
 
     // canvas sizing
-    const width = 1000;
-    const rowH = 80;
+    const width = 400;
+    const rowH = 60;
     const height = entries.length * rowH;
     const dpr = window.devicePixelRatio || 1;
     const canvas = document.createElement('canvas');
@@ -259,53 +292,43 @@ genBtn.addEventListener('click', () => {
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    // background
-    ctx.fillStyle = '#0f172a'; // dark bg
-    ctx.fillRect(0, 0, width, height);
+    // transparent background (don't paint a solid background so PNG keeps alpha)
+    canvas.style.background = 'transparent';
+    ctx.clearRect(0, 0, width, height);
 
     // draw rows
     entries.forEach((e, i) => {
         const y = i * rowH;
         // stripe
-        ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)';
-        ctx.fillRect(0, y, width, rowH);
+        // ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)';
+        // ctx.fillRect(0, y, width, rowH);
 
+        const nameX = 40;
+        const nameY = y + rowH / 2; 
+        
         // placement
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px sans-serif';
+        ctx.fillStyle = '#523d30';
+        ctx.font = '800 40px Roboto, serif';
         ctx.textAlign = 'left';
-        ctx.fillText(e.place, 20, y + rowH / 2 + 12);
+        ctx.fillText(e.place + '. ' + e.name, 20, y + rowH / 2);
 
-        // name
-        ctx.fillStyle = '#e6eef8';
-        ctx.font = '700 28px system-ui, sans-serif';
-        ctx.fillText(e.name, 80, y + rowH / 2 + 10);
 
-        // character badge (circle with initials)
-        const badgeX = width - 80;
-        const badgeY = y + rowH / 2;
-        const radius = 30;
-        // pick color from character name hash
-        const hash = (e.character || e.name).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-        const hue = hash % 360;
-        ctx.fillStyle = `hsl(${hue} 70% 45%)`;
-        ctx.beginPath();
-        ctx.arc(badgeX, badgeY, radius, 0, Math.PI * 2);
-        ctx.fill();
 
-        // initials
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(charInitials(e.character || e.name), badgeX, badgeY + 7);
 
-        // character name small text underneath initials if present
-        if (e.character) {
-            ctx.fillStyle = '#cbd5e1';
-            ctx.font = '14px sans-serif';
-            ctx.textAlign = 'right';
-            ctx.fillText(e.character, width - 140, y + rowH / 2 + 28);
+        // character icon / initials: render as a standalone square to the right of the name
+        const iconSize = 35;
+        // measure text to place icon right after name
+        const textWidth = ctx.measureText(e.name).width;
+
+        const iconLeftPadding = 30;
+        let iconX = Math.round(nameX + textWidth + iconLeftPadding);
+        // ensure icon doesn't overflow canvas
+        if (iconX + iconSize > width - iconLeftPadding) {
+            iconX = width - iconLeftPadding - iconSize;
         }
+        const iconY = y + (rowH - iconSize) / 2 - 10;
+        ctx.drawImage(e.icon, iconX, iconY, iconSize, iconSize);
+
     });
 
     graphicArea.appendChild(canvas);
@@ -323,4 +346,38 @@ genBtn.addEventListener('click', () => {
     dl.href = canvas.toDataURL('image/png');
     dl.download = 'top8.png';
     graphicArea.appendChild(dl);
+}
+
+// update existing generate button to use the refactored function
+genBtn.addEventListener('click', async () => {
+    const rows = Array.from(container.querySelectorAll('.top8-row'));
+    if (!rows.length) {
+        graphicArea.innerText = 'No rows to generate from.';
+        return;
+    }
+
+    const entries = rows.map(r => {
+        const place = r.children[0]?.textContent?.replace('.', '')?.trim() || '';
+        const name = (r.querySelector('input')?.value || '').trim() || 'Unknown';
+        const character = (r.querySelector('select')?.value || '').trim();
+        return { place, name, character, icon: null };
+    });
+
+    await generateGraphic(entries);
+});
+
+// wire up the test button to use dummy data for quick testing
+testBtn.addEventListener('click', async () => {
+    const dummy = [
+        { place: '1', name: 'Lucky', character: 'Fox', icon: null },
+        { place: '2', name: 'Mango', character: 'Falco', icon: null },
+        { place: '3', name: 'Mew2King', character: 'Marth', icon: null },
+        { place: '4', name: 'PPMD', character: 'Sheik', icon: null },
+        { place: '5', name: 'Armada', character: 'Peach', icon: null },
+        { place: '6', name: 'Hbox', character: 'Jigglypuff', icon: null },
+        { place: '7', name: 'Wizzrobe', character: 'Captain Falcon', icon: null },
+        { place: '8', name: 'Axe', character: 'Pikachu', icon: null }
+    ];
+
+    await generateGraphic(dummy);
 });
