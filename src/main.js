@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, Menu } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import fs from "node:fs/promises";
@@ -18,6 +18,7 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -34,6 +35,18 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  // Add context menu to allow copying images/canvas
+  mainWindow.webContents.on("context-menu", (_, params) => {
+    if (params.mediaType === "image" || params.mediaType === "canvas") {
+      Menu.buildFromTemplate([
+        {
+          label: "Copy Image",
+          click: () => mainWindow.webContents.copyImageAt(params.x, params.y),
+        },
+      ]).popup();
+    }
+  });
 };
 
 // This method will be called when Electron has finished
