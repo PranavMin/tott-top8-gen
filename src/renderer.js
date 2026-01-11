@@ -4,9 +4,37 @@ import { getTop8 } from "./api.js";
 import { loadCharacterIcon } from "./icon.js";
 import { generateGraphic } from "./generategraphic.js";
 
-
 // removed automatic fetch-on-load and add UI to fetch/render on button click
 const STARTGG_URL = "";
+
+const MELEE_CHARACTERS = [
+  "Fox",
+  "Falco",
+  "Marth",
+  "Sheik",
+  "Peach",
+  "Jigglypuff",
+  "Captain Falcon",
+  "Ice Climbers",
+  "Samus",
+  "Ganondorf",
+  "Young Link",
+  "Link",
+  "Luigi",
+  "Mario",
+  "Bowser",
+  "Yoshi",
+  "Pikachu",
+  "Roy",
+  "Mr. Game & Watch",
+  "Ness",
+  "Mewtwo",
+  "Pichu",
+  "Dr. Mario",
+  "Donkey Kong",
+  "Kirby",
+  "Zelda",
+];
 
 // input for user to paste start.gg link
 const input = document.createElement("input");
@@ -88,6 +116,43 @@ testBtn.style.width = "100%";
 testBtn.style.maxWidth = "1008px";
 document.body.appendChild(testBtn);
 
+async function handleGraphicGeneration(entries) {
+  const addBorder = !!document.getElementById("add-border-chk")?.checked;
+  graphicArea.innerHTML = "Generating...";
+
+  try {
+    const canvas = await generateGraphic(entries, { addBorder });
+    graphicArea.innerHTML = "";
+    graphicArea.appendChild(canvas);
+
+    // download button
+    const dl = document.createElement("a");
+    dl.textContent = "Download PNG";
+    dl.style.display = "inline-block";
+    dl.style.marginTop = "8px";
+    dl.style.padding = "8px 12px";
+    dl.style.background = "#2563eb";
+    dl.style.color = "#fff";
+    dl.style.borderRadius = "4px";
+    dl.style.textDecoration = "none";
+    dl.href = canvas.toDataURL("image/png");
+    dl.download = "top8.png";
+    graphicArea.appendChild(dl);
+
+    // persist mapping of cleaned player name -> character for future autocomplete
+    const map = {};
+    entries.forEach((e) => {
+      if (e.name && e.character) {
+        map[cleanName(e.name)] = e.character;
+      }
+    });
+    await window.electronAPI.writeCache(map).catch(() => null);
+  } catch (err) {
+    console.error(err);
+    graphicArea.innerText = "Error generating graphic: " + err.message;
+  }
+}
+
 btn.addEventListener("click", async () => {
   btn.disabled = true;
   container.textContent = "Loading...";
@@ -109,34 +174,6 @@ btn.addEventListener("click", async () => {
 
     if (nodes && nodes.length) {
       // render editable inputs + character dropdown for each player
-      const MELEE_CHARACTERS = [
-        "Fox",
-        "Falco",
-        "Marth",
-        "Sheik",
-        "Peach",
-        "Jigglypuff",
-        "Captain Falcon",
-        "Ice Climbers",
-        "Samus",
-        "Ganondorf",
-        "Young Link",
-        "Link",
-        "Luigi",
-        "Mario",
-        "Bowser",
-        "Yoshi",
-        "Pikachu",
-        "Roy",
-        "Mr. Game & Watch",
-        "Ness",
-        "Mewtwo",
-        "Pichu",
-        "Dr. Mario",
-        "Donkey Kong",
-        "Kirby",
-        "Zelda",
-      ];
 
       container.innerHTML = "";
 
@@ -168,11 +205,7 @@ btn.addEventListener("click", async () => {
 
         const nameInput = document.createElement("input");
         nameInput.type = "text";
-        nameInput.value = (function cleanName(name) {
-          if (!name) return "Unknown";
-          const parts = name.split("|");
-          return parts[parts.length - 1].trim();
-        })(rawName);
+        nameInput.value = cleanName(rawName);
         nameInput.style.flex = "1";
         nameInput.style.minWidth = "10px";
 
@@ -219,14 +252,6 @@ btn.addEventListener("click", async () => {
     btn.disabled = false;
   }
 });
-
-// helper: create a simple initials badge for a character name
-function charInitials(name) {
-  if (!name) return "?";
-  const parts = name.replace(/&/g, " ").split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
 
 // update existing generate button to use the refactored function
 genBtn.addEventListener("click", async () => {
@@ -306,21 +331,7 @@ genBtn.addEventListener("click", async () => {
   // clear any previous status message (errorDiv used instead of replacing container)
   errorDiv.textContent = "";
 
-  const addBorder = !!document.getElementById("add-border-chk")?.checked;
-  await generateGraphic(entries, { graphicArea, addBorder });
-
-  // persist mapping of cleaned player name -> character for future autocomplete
-  try {
-    const map = {};
-    entries.forEach((e) => {
-      if (e.name && e.character) {
-        map[cleanName(e.name)] = e.character;
-      }
-    });
-    await window.electronAPI.writeCache(map).catch(() => null);
-  } catch (e) {
-    // ignore cache write errors
-  }
+  await handleGraphicGeneration(entries);
 });
 
 // wire up the test button to use dummy data for quick testing
@@ -336,18 +347,5 @@ testBtn.addEventListener("click", async () => {
     { place: "8", name: "Axe", character: "Pikachu", icon: null },
   ];
 
-  // compute addBorder (same as you do for the real generate)
-  const addBorder = !!document.getElementById("add-border-chk")?.checked;
-  await generateGraphic(dummy, { graphicArea, addBorder });
-
-  // persist this dummy as a convenience
-  try {
-    const map = {};
-    dummy.forEach((e) => {
-      if (e.name && e.character) map[cleanName(e.name)] = e.character;
-    });
-    await window.electronAPI.writeCache(map).catch(() => null);
-  } catch (e) {
-    // ignore
-  }
+  await handleGraphicGeneration(dummy);
 });

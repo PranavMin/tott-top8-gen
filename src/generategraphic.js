@@ -2,17 +2,16 @@ import { loadCharacterIcon } from "./icon.js";
 
 // Generate graphic from the editable rows
 // refactor: single function that draws given entries (preloads icons)
-export async function generateGraphic(entries, { graphicArea, addBorder = false } = {}) {
-  if (!graphicArea) throw new Error("generateGraphic requires a graphicArea element");
-  graphicArea.innerHTML = "";
-
+export async function generateGraphic(
+  entries,
+  { addBorder = false } = {}
+) {
   // use addBorder instead of querying the DOM in this module
   const borderSize = addBorder ? 1 : 0;
 
   // ensure entries is an array
   if (!Array.isArray(entries) || !entries.length) {
-    graphicArea.innerText = "No entries to generate from.";
-    return;
+    throw new Error("No entries to generate from.");
   }
 
   // preload icons for each entry (attach as entry.icon)
@@ -129,19 +128,5 @@ export async function generateGraphic(entries, { graphicArea, addBorder = false 
     );
   }
 
-  graphicArea.appendChild(canvas);
-
-  // download button
-  const dl = document.createElement("a");
-  dl.textContent = "Download PNG";
-  dl.style.display = "inline-block";
-  dl.style.marginTop = "8px";
-  dl.style.padding = "8px 12px";
-  dl.style.background = "#2563eb";
-  dl.style.color = "#fff";
-  dl.style.borderRadius = "4px";
-  dl.style.textDecoration = "none";
-  dl.href = canvas.toDataURL("image/png");
-  dl.download = "top8.png";
-  graphicArea.appendChild(dl);
+  return canvas;
 }
