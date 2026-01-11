@@ -35,7 +35,7 @@ const createWindow = () => {
   }
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   // Add context menu to allow copying images/canvas
   mainWindow.webContents.on("context-menu", (_, params) => {
