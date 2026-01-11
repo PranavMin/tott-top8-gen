@@ -98,3 +98,31 @@ ipcMain.handle("save-png", async (_, dataUrl) => {
   await fs.writeFile(filePath, Buffer.from(base64, "base64"));
   return { canceled: false, path: filePath };
 });
+
+// Add simple persistent cache (player name -> character) stored in the user's app data
+ipcMain.handle("read-cache", async () => {
+  try {
+    const cachePath = path.join(app.getPath("userData"), "character-cache.json");
+    const data = await fs.readFile(cachePath, "utf8").catch(() => null);
+    if (!data) return {};
+    return JSON.parse(data);
+  } catch (err) {
+    console.error("Failed to read cache:", err);
+    return {};
+  }
+});
+
+ipcMain.handle("write-cache", async (_, newMap) => {
+  try {
+    const cachePath = path.join(app.getPath("userData"), "character-cache.json");
+    // read existing cache and merge
+    const existingData = await fs.readFile(cachePath, "utf8").catch(() => null);
+    const existing = existingData ? JSON.parse(existingData) : {};
+    const merged = Object.assign({}, existing, newMap || {});
+    await fs.writeFile(cachePath, JSON.stringify(merged, null, 2), "utf8");
+    return { ok: true };
+  } catch (err) {
+    console.error("Failed to write cache:", err);
+    return { ok: false, error: String(err) };
+  }
+});

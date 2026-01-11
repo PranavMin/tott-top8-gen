@@ -4,6 +4,7 @@ import { getTop8 } from "./api.js";
 import { loadCharacterIcon } from "./icon.js";
 import { generateGraphic } from "./generategraphic.js";
 
+
 // removed automatic fetch-on-load and add UI to fetch/render on button click
 const STARTGG_URL = "";
 
@@ -139,6 +140,9 @@ btn.addEventListener("click", async () => {
 
       container.innerHTML = "";
 
+      // load persisted cache (player name -> character)
+      const cache = await window.electronAPI.readCache().catch(() => ({}));
+
       const sorted = nodes
         .slice()
         .sort((a, b) => (a.placement ?? 0) - (b.placement ?? 0))
@@ -184,6 +188,16 @@ btn.addEventListener("click", async () => {
           opt.textContent = c;
           charSelect.appendChild(opt);
         });
+
+        // if we have a cached character for this player, set it as the default
+        try {
+          const key = cleanName(rawName);
+          if (cache && cache[key]) {
+            charSelect.value = cache[key];
+          }
+        } catch (e) {
+          // ignore cache lookup errors
+        }
 
         charSelect.style.flex = "1";
 
@@ -294,6 +308,19 @@ genBtn.addEventListener("click", async () => {
 
   const addBorder = !!document.getElementById("add-border-chk")?.checked;
   await generateGraphic(entries, { graphicArea, addBorder });
+
+  // persist mapping of cleaned player name -> character for future autocomplete
+  try {
+    const map = {};
+    entries.forEach((e) => {
+      if (e.name && e.character) {
+        map[cleanName(e.name)] = e.character;
+      }
+    });
+    await window.electronAPI.writeCache(map).catch(() => null);
+  } catch (e) {
+    // ignore cache write errors
+  }
 });
 
 // wire up the test button to use dummy data for quick testing
@@ -312,4 +339,15 @@ testBtn.addEventListener("click", async () => {
   // compute addBorder (same as you do for the real generate)
   const addBorder = !!document.getElementById("add-border-chk")?.checked;
   await generateGraphic(dummy, { graphicArea, addBorder });
+
+  // persist this dummy as a convenience
+  try {
+    const map = {};
+    dummy.forEach((e) => {
+      if (e.name && e.character) map[cleanName(e.name)] = e.character;
+    });
+    await window.electronAPI.writeCache(map).catch(() => null);
+  } catch (e) {
+    // ignore
+  }
 });
