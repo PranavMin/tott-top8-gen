@@ -1,12 +1,8 @@
-# Top 8 Graphic Generator
 [![Netlify Status](https://api.netlify.com/api/v1/badges/41e0ce8e-11b0-4eef-977a-e57b4128308a/deploy-status)](https://app.netlify.com/projects/toolofthetavern/deploys)
 
+# Tool of the Tavern
 
-This project is a web-based tool designed to generate "Top 8" graphics for esports tournaments, particularly for games like Super Smash Bros. Melee. It allows users to input tournament results, select characters for each player, and then generate a shareable image. Additionally, it includes an experimental image filter section to apply HSL adjustments and background removal to images.
-
-## Live Demo
-
-You can try out the live application here: https://toolofthetavern.netlify.app/
+This project is a web-based tool designed to speed up the creation of Talk of the Tavern, a weekly newsletter for Melee @ Abbey Tavern, a San Francisco Melee local (start.gg/abbey). It allows users to input tournament results, select characters for each player, and then generate a shareable Top 8 graphic. Additionally, it includes an experimental image filter section to apply HSL adjustments and background removal to images.
 
 ## Features
 
