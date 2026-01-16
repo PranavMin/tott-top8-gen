@@ -37,18 +37,25 @@ const MELEE_CHARACTERS = [
   "Zelda",
 ];
 
+// FIELDSET
+const fieldset = document.createElement("fieldset");
+fieldset.role = "group";
+fieldset.id = "top8-fieldset";
+fieldset.className = "top8-fieldset";
+document.body.appendChild(fieldset);
+
 // INPUT - Start GG event URL
 const input = document.createElement("input");
 input.id = "startgg-input";
 input.placeholder = "Paste start.gg event URL or tournament/.../event/...";
 input.value = STARTGG_URL; // prefill with example
-document.body.appendChild(input);
+fieldset.appendChild(input);
 
 // BUTTON - Fetch Top 8
 const btn = document.createElement("button");
 btn.id = "fetch-top8-btn";
-btn.textContent = "Fetch Top 8";
-document.body.appendChild(btn);
+btn.textContent = "Fetch";
+fieldset.appendChild(btn);
 
 // WARN / STATUS AREA and RESULTS CONTAINER
 const container = document.createElement("div");

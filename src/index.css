@@ -17,16 +17,7 @@ p {
   margin-bottom: 16px;
 }
 
-#startgg-input {
-  display: block;
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto 8px auto;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-#fetch-top8-btn,
+/* #fetch-top8-btn, */
 #generate-graphic-btn,
 #test-graphic-btn {
   display: block;
