@@ -1,12 +1,11 @@
 import "./index.css";
-import { extractSlug, cleanName } from "./util.js";
+import { cleanName } from "./util.js";
 import { getTop8 } from "./api.js";
-import { loadCharacterIcon } from "./icon.js";
 import { generateGraphic } from "./generategraphic.js";
-import { applyHslFilter, getBlobUrl, revokeBlobUrl } from "./filter.js";
+import { createHslFilterSection } from "./imagefilterFE.js"; // NEW IMPORT
 
 const STARTGG_URL = "";
-const SHOW_TEST_BUTTON = true;
+const SHOW_TEST_BUTTON = false;
 
 const MELEE_CHARACTERS = [
   "Fox",
@@ -81,60 +80,10 @@ top8GraphicArea.id = "graphic-area";
 // center canvas and buttons inside this area
 document.body.appendChild(top8GraphicArea);
 
-// ============================================
-// HSL IMAGE FILTER SECTION
-// ============================================
-const hslSection = document.createElement("section");
-hslSection.id = "hsl-filter-section";
-hslSection.className = "hsl-filter-section";
-document.body.appendChild(hslSection);
+// Append the HSL filter section after the main graphic generator elements
+// center canvas and buttons inside this area
+document.body.appendChild(top8GraphicArea);
 
-const hslTitle = document.createElement("h2");
-hslTitle.textContent = "Image Filter";
-hslSection.appendChild(hslTitle);
-
-const hslFieldset = document.createElement("fieldset");
-hslFieldset.id = "hsl-fieldset";
-hslFieldset.role = "group";
-hslSection.appendChild(hslFieldset);
-
-// Image input
-const imageInput = document.createElement("input");
-imageInput.id = "hsl-image-input";
-imageInput.type = "file";
-imageInput.accept = "image/*";
-hslFieldset.appendChild(imageInput);
-
-// Background removal checkbox
-const bgRemovalLabel = document.createElement("label");
-bgRemovalLabel.style.display = "flex";
-bgRemovalLabel.style.alignItems = "center";
-bgRemovalLabel.style.gap = "8px";
-bgRemovalLabel.style.cursor = "pointer";
-
-const bgRemovalCheckbox = document.createElement("input");
-bgRemovalCheckbox.id = "remove-bg-checkbox";
-bgRemovalCheckbox.type = "checkbox";
-bgRemovalCheckbox.checked = false;
-bgRemovalLabel.appendChild(bgRemovalCheckbox);
-
-const bgRemovalText = document.createElement("span");
-bgRemovalText.textContent = "Remove background";
-bgRemovalLabel.appendChild(bgRemovalText);
-
-hslFieldset.appendChild(bgRemovalLabel);
-
-// Apply button
-const applyHslBtn = document.createElement("button");
-applyHslBtn.id = "apply-hsl-btn";
-applyHslBtn.textContent = "Apply Filter";
-applyHslBtn.style.display = "none";
-hslFieldset.appendChild(applyHslBtn);
-
-// HSL result area
-const hslResultArea = document.createElement("div");
-hslResultArea.id = "hsl-result-area";
-hslSection.appendChild(hslResultArea);
 
 // add a test button to generate graphic from dummy data
 if (SHOW_TEST_BUTTON) {
@@ -386,3 +335,6 @@ generateGraphicBtn.addEventListener("click", async () => {
 
   await handleGraphicGeneration(entries);
 });
+
+const hslFilterSection = createHslFilterSection();
+document.body.appendChild(hslFilterSection);
