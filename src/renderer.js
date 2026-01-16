@@ -6,7 +6,7 @@ import { generateGraphic } from "./generategraphic.js";
 import { applyHslFilter, getBlobUrl, revokeBlobUrl } from "./filter.js";
 
 const STARTGG_URL = "";
-const SHOW_TEST_BUTTON = false;
+const SHOW_TEST_BUTTON = true;
 
 const MELEE_CHARACTERS = [
   "Fox",
@@ -37,6 +37,12 @@ const MELEE_CHARACTERS = [
   "Zelda",
 ];
 
+// Custom font for graphic generation
+const CUSTOM_GRAPHIC_FONT_FAMILY = "'Press Start 2P'";
+const fontLoadPromise = document.fonts.load(
+  `44px ${CUSTOM_GRAPHIC_FONT_FAMILY}`
+);
+
 // FIELDSET
 const fetTop8Fieldset = document.createElement("fieldset");
 fetTop8Fieldset.role = "group";
@@ -47,7 +53,8 @@ document.body.appendChild(fetTop8Fieldset);
 // INPUT - Start GG event URL
 const startggInput = document.createElement("input");
 startggInput.id = "startgg-input";
-startggInput.placeholder = "Paste start.gg event URL or tournament/.../event/...";
+startggInput.placeholder =
+  "Paste start.gg event URL or tournament/.../event/...";
 startggInput.value = STARTGG_URL; // prefill with example
 fetTop8Fieldset.appendChild(startggInput);
 
@@ -155,11 +162,11 @@ if (SHOW_TEST_BUTTON) {
 }
 
 async function handleGraphicGeneration(entries) {
-  const addBorder = !!document.getElementById("add-border-chk")?.checked;
+  await fontLoadPromise; // Ensure the custom font is loaded before generating the graphic
   top8GraphicArea.innerHTML = "Generating...";
 
   try {
-    const canvas = await generateGraphic(entries, { addBorder });
+    const canvas = await generateGraphic(entries, {});
     top8GraphicArea.innerHTML = "";
     top8GraphicArea.appendChild(canvas);
 
@@ -210,7 +217,10 @@ fetchTop8Btn.addEventListener("click", async () => {
   // validate input contains "event"
   const raw = (startggInput.value || "").trim();
   const url = raw || STARTGG_URL;
-  if (!url.toLowerCase().includes("event") || !url.toLowerCase().includes("tournament")) {
+  if (
+    !url.toLowerCase().includes("event") ||
+    !url.toLowerCase().includes("tournament")
+  ) {
     container.innerText =
       'Invalid link: please provide a start.gg URL or slug that contains "tournament/.../event/".';
     fetchTop8Btn.disabled = false;
@@ -227,7 +237,7 @@ fetchTop8Btn.addEventListener("click", async () => {
 
     if (nodes && nodes.length) {
       // render editable inputs + character dropdown for each player
-          fetchTop8Btn.textContent = "Fetched!";
+      fetchTop8Btn.textContent = "Fetched!";
       container.innerHTML = "";
 
       // load persisted cache (player name -> character)
@@ -302,7 +312,6 @@ fetchTop8Btn.addEventListener("click", async () => {
   } finally {
     fetchTop8Btn.disabled = false;
     fetchTop8Btn.ariaBusy = "false";
-
   }
 });
 
@@ -399,8 +408,6 @@ imageInput.addEventListener("change", (e) => {
   }
 });
 
-
-
 // Apply HSL filter
 applyHslBtn.addEventListener("click", async () => {
   if (!currentImageFile) {
@@ -451,8 +458,6 @@ applyHslBtn.addEventListener("click", async () => {
       revokeBlobUrl(url);
     };
     hslResultArea.appendChild(downloadBtn);
-
-
   } catch (err) {
     console.error(err);
     hslResultArea.innerText = `Error applying filter: ${err.message}`;
@@ -460,4 +465,3 @@ applyHslBtn.addEventListener("click", async () => {
     applyHslBtn.disabled = false;
   }
 });
-

@@ -2,9 +2,7 @@ import { loadCharacterIcon } from "./icon.js";
 
 // Generate graphic from the editable rows
 // refactor: single function that draws given entries (preloads icons)
-export async function generateGraphic(
-  entries
-) {
+export async function generateGraphic(entries, options = {}) {
   // ensure entries is an array
   if (!Array.isArray(entries) || !entries.length) {
     throw new Error("No entries to generate from.");
@@ -17,14 +15,16 @@ export async function generateGraphic(
     })
   );
 
+  const { customFontFamily } = options;
+
   // layout constants
   const leftPadding = 4;
   const rightPadding = 4;
   const iconLeftPadding = 24;
   const iconSize = 60;
   const rowH = 70;
-  const textFont = "700 44px Roboto, serif"; // name & placement font (44px)
-  const headerFont = "700 72px Roboto, serif"; // "Top 8" font (72px)
+  const textFont = `700 44px Roboto Slab, serif`; // name & placement font (44px)
+  const headerFont = `700 72px ${customFontFamily || "Roboto Slab, serif"}`; // "Top 8" font (72px)
   const headerBottomPadding = 24;
 
   // measurement context (unscaled)
@@ -45,7 +45,7 @@ export async function generateGraphic(
   const headerWidth = measureCtx.measureText(headerText).width;
   const headerHeight = 72; // approximate; matches font size
 
-  // compute inner content width (without border) and final needed width including border
+  // compute inner content width and final needed width
   const neededWidthForRows =
     leftPadding + maxRowTextWidth + iconLeftPadding + iconSize + rightPadding;
   const innerWidth = Math.ceil(
@@ -53,7 +53,6 @@ export async function generateGraphic(
   ); // min width 200
   const neededWidth = innerWidth;
 
-  // compute inner content height and final height including border
   const innerHeight =
     headerHeight + headerBottomPadding + entries.length * rowH;
   const height = innerHeight;
@@ -72,17 +71,13 @@ export async function generateGraphic(
   canvas.style.background = "transparent";
   ctx.clearRect(0, 0, neededWidth, height);
 
-  // draw header (offset by borderSize)
+  // draw header
   ctx.fillStyle = "#523d30";
   ctx.font = headerFont;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   const headerY = headerHeight / 2;
-  ctx.fillText(
-    headerText,
-    (innerWidth - headerWidth) / 2,
-    headerY
-  );
+  ctx.fillText(headerText, (innerWidth - headerWidth) / 2, headerY);
 
   // draw rows
   ctx.font = textFont;
@@ -98,9 +93,7 @@ export async function generateGraphic(
 
     // measure to place icon immediately after text
     const textWidth = ctx.measureText(label).width;
-    let iconX = Math.round(
-      leftPadding + textWidth + iconLeftPadding
-    );
+    let iconX = Math.round(leftPadding + textWidth + iconLeftPadding);
     // ensure icon doesn't overflow inner content area
     const innerRight = innerWidth - rightPadding;
     if (iconX + iconSize > innerRight) {
