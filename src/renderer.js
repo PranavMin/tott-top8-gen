@@ -66,7 +66,7 @@ document.body.appendChild(container);
 const genBtn = document.createElement("button");
 genBtn.id = "generate-graphic-btn";
 genBtn.textContent = "Generate Graphic";
-genBtn.disabled = true; // enabled after successful fetch/render
+genBtn.style.display = "none"; // hidden until successful fetch/render
 document.body.appendChild(genBtn);
 
 // area where generated canvas / download link will be placed
@@ -74,21 +74,6 @@ const graphicArea = document.createElement("div");
 graphicArea.id = "graphic-area";
 // center canvas and buttons inside this area
 document.body.appendChild(graphicArea);
-
-// add a checkbox to toggle a border around the generated image
-const borderLabel = document.createElement("label");
-borderLabel.className = "border-label";
-
-const borderChk = document.createElement("input");
-borderChk.type = "checkbox";
-borderChk.id = "add-border-chk";
-
-borderLabel.appendChild(borderChk);
-borderLabel.appendChild(document.createTextNode("Add border"));
-
-// place the checkbox underneath the generate button but above the canvas
-// insert before the graphic area so it shows above whatever canvas will be appended there
-document.body.insertBefore(borderLabel, graphicArea);
 
 // add a test button to generate graphic from dummy data
 if (SHOW_TEST_BUTTON) {
@@ -160,7 +145,7 @@ async function handleGraphicGeneration(entries) {
 btn.addEventListener("click", async () => {
   btn.disabled = true;
   container.textContent = "Loading...";
-  genBtn.disabled = true;
+  genBtn.style.display = "none";
   graphicArea.innerHTML = "";
 
   // validate input contains "event"
@@ -238,7 +223,7 @@ btn.addEventListener("click", async () => {
         container.appendChild(row);
       });
       // enable generate button when rows are present
-      genBtn.disabled = false;
+      genBtn.style.display = "block";
     } else {
       container.innerText = "No standings returned.";
     }
