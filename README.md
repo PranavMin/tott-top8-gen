@@ -1,4 +1,6 @@
 # Top 8 Graphic Generator
+[![Netlify Status](https://api.netlify.com/api/v1/badges/41e0ce8e-11b0-4eef-977a-e57b4128308a/deploy-status)](https://app.netlify.com/projects/toolofthetavern/deploys)
+
 
 This project is a web-based tool designed to generate "Top 8" graphics for esports tournaments, particularly for games like Super Smash Bros. Melee. It allows users to input tournament results, select characters for each player, and then generate a shareable image. Additionally, it includes an experimental image filter section to apply HSL adjustments and background removal to images.
 
