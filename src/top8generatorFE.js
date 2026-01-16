@@ -2,7 +2,7 @@ import "./index.css";
 import { cleanName } from "./util.js";
 import { getTop8 } from "./api.js";
 import { generateGraphic } from "./generategraphic.js";
-import { createHslFilterSection } from "./imagefilterFE.js"; // NEW IMPORT
+import { createHslFilterSection } from "./imagefilterFE.js";
 
 const STARTGG_URL = "";
 const SHOW_TEST_BUTTON = false;
