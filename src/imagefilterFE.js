@@ -113,20 +113,31 @@ applyHslBtn.addEventListener("click", async () => {
     hslResultArea.appendChild(previewImg);
 
     // Create download button
-    const downloadBtn = document.createElement("button");
-    downloadBtn.textContent = "Download Image";
-    downloadBtn.className = "hsl-download-btn";
-    downloadBtn.style.display = "block";
-    downloadBtn.style.margin = "16px auto";
-    downloadBtn.onclick = () => {
-      const url = getBlobUrl(filteredBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `filtered-${Date.now()}.png`;
-      a.click();
-      revokeBlobUrl(url);
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "Copy Image";
+    copyBtn.className = "hsl-copy-btn"; // Changed class name for clarity
+    copyBtn.style.display = "block";
+    copyBtn.style.margin = "16px auto";
+    copyBtn.onclick = async () => { // Made async for clipboard API
+      try {
+        // Check if the Clipboard API is available and permission is granted
+        if (navigator.clipboard && navigator.clipboard.write) {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              [filteredBlob.type]: filteredBlob,
+            }),
+          ]);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => (copyBtn.textContent = "Copy Image"), 2000);
+        } else {
+          alert("Your browser does not support copying images to clipboard directly.");
+        }
+      } catch (err) {
+        console.error("Failed to copy image: ", err);
+        alert(`Failed to copy image: ${err.message}`);
+      }
     };
-    hslResultArea.appendChild(downloadBtn);
+    hslResultArea.appendChild(copyBtn); // Appended the new copy button
   } catch (err) {
     console.error(err);
     hslResultArea.innerText = `Error applying filter: ${err.message}`;
