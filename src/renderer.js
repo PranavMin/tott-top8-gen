@@ -6,6 +6,7 @@ import { generateGraphic } from "./generategraphic.js";
 
 // removed automatic fetch-on-load and add UI to fetch/render on button click
 const STARTGG_URL = "";
+const SHOW_TEST_BUTTON = true;
 
 const MELEE_CHARACTERS = [
   "Fox",
@@ -83,10 +84,28 @@ borderLabel.appendChild(document.createTextNode("Add border"));
 document.body.insertBefore(borderLabel, graphicArea);
 
 // add a test button to generate graphic from dummy data
-const testBtn = document.createElement("button");
-testBtn.id = "test-graphic-btn";
-testBtn.textContent = "Test Graphic (Dummy Data)";
-document.body.appendChild(testBtn);
+if (SHOW_TEST_BUTTON) {
+  const testBtn = document.createElement("button");
+  testBtn.id = "test-graphic-btn";
+  testBtn.textContent = "Test Graphic (Dummy Data)";
+  document.body.appendChild(testBtn);
+
+  // wire up the test button to use dummy data for quick testing
+  testBtn.addEventListener("click", async () => {
+    const dummy = [
+      { place: "1", name: "Lucky", character: "Fox", icon: null },
+      { place: "2", name: "Mango", character: "Falco", icon: null },
+      { place: "3", name: "Mew2King", character: "Marth", icon: null },
+      { place: "4", name: "PPMD", character: "Sheik", icon: null },
+      { place: "5", name: "Armada", character: "Peach", icon: null },
+      { place: "6", name: "Hbox", character: "Jigglypuff", icon: null },
+      { place: "7", name: "Wizzrobe", character: "Captain Falcon", icon: null },
+      { place: "8", name: "Axe", character: "Pikachu", icon: null },
+    ];
+
+    await handleGraphicGeneration(dummy);
+  });
+}
 
 async function handleGraphicGeneration(entries) {
   const addBorder = !!document.getElementById("add-border-chk")?.checked;
@@ -278,20 +297,4 @@ genBtn.addEventListener("click", async () => {
   errorDiv.textContent = "";
 
   await handleGraphicGeneration(entries);
-});
-
-// wire up the test button to use dummy data for quick testing
-testBtn.addEventListener("click", async () => {
-  const dummy = [
-    { place: "1", name: "Lucky", character: "Fox", icon: null },
-    { place: "2", name: "Mango", character: "Falco", icon: null },
-    { place: "3", name: "Mew2King", character: "Marth", icon: null },
-    { place: "4", name: "PPMD", character: "Sheik", icon: null },
-    { place: "5", name: "Armada", character: "Peach", icon: null },
-    { place: "6", name: "Hbox", character: "Jigglypuff", icon: null },
-    { place: "7", name: "Wizzrobe", character: "Captain Falcon", icon: null },
-    { place: "8", name: "Axe", character: "Pikachu", icon: null },
-  ];
-
-  await handleGraphicGeneration(dummy);
 });
