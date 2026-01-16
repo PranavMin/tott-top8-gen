@@ -2,7 +2,9 @@ import { loadCharacterIcon } from "./icon.js";
 
 // Generate graphic from the editable rows
 // refactor: single function that draws given entries (preloads icons)
-export async function generateGraphic(entries, options = {}) {
+export async function generateGraphic(
+  entries
+) {
   // ensure entries is an array
   if (!Array.isArray(entries) || !entries.length) {
     throw new Error("No entries to generate from.");
@@ -15,16 +17,14 @@ export async function generateGraphic(entries, options = {}) {
     })
   );
 
-  const { customFontFamily } = options;
-
   // layout constants
   const leftPadding = 4;
   const rightPadding = 4;
   const iconLeftPadding = 24;
   const iconSize = 60;
-  const rowH = 70;
+  const rowH = 70; 
   const textFont = `700 44px Roboto Slab, serif`; // name & placement font (44px)
-  const headerFont = `700 72px ${customFontFamily || "Roboto Slab, serif"}`; // "Top 8" font (72px)
+  const headerFont = `700 72px Roboto Slab, serif`; // "Top 8" font (72px)
   const headerBottomPadding = 24;
 
   // measurement context (unscaled)
@@ -53,9 +53,8 @@ export async function generateGraphic(entries, options = {}) {
   ); // min width 200
   const neededWidth = innerWidth;
 
-  const innerHeight =
-    headerHeight + headerBottomPadding + entries.length * rowH;
-  const height = innerHeight;
+  // compute final height
+  const height = headerHeight + headerBottomPadding + entries.length * rowH;
 
   // device pixel ratio handling
   const dpr = window.devicePixelRatio || 1;
@@ -77,7 +76,11 @@ export async function generateGraphic(entries, options = {}) {
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   const headerY = headerHeight / 2;
-  ctx.fillText(headerText, (innerWidth - headerWidth) / 2, headerY);
+  ctx.fillText(
+    headerText,
+    (innerWidth - headerWidth) / 2,
+    headerY
+  );
 
   // draw rows
   ctx.font = textFont;
@@ -93,7 +96,9 @@ export async function generateGraphic(entries, options = {}) {
 
     // measure to place icon immediately after text
     const textWidth = ctx.measureText(label).width;
-    let iconX = Math.round(leftPadding + textWidth + iconLeftPadding);
+    let iconX = Math.round(
+      leftPadding + textWidth + iconLeftPadding
+    );
     // ensure icon doesn't overflow inner content area
     const innerRight = innerWidth - rightPadding;
     if (iconX + iconSize > innerRight) {

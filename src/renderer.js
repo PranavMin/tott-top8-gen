@@ -38,10 +38,9 @@ const MELEE_CHARACTERS = [
 ];
 
 // Custom font for graphic generation
-const CUSTOM_GRAPHIC_FONT_FAMILY = "'Press Start 2P'";
-const fontLoadPromise = document.fonts.load(
-  `44px ${CUSTOM_GRAPHIC_FONT_FAMILY}`
-);
+// We want to ensure Roboto Slab is loaded before graphic generation
+const ROBOTO_SLAB_FONT_FAMILY = "'Roboto Slab'";
+const fontLoadPromise = document.fonts.load(`44px ${ROBOTO_SLAB_FONT_FAMILY}`);
 
 // FIELDSET
 const fetTop8Fieldset = document.createElement("fieldset");
@@ -166,7 +165,7 @@ async function handleGraphicGeneration(entries) {
   top8GraphicArea.innerHTML = "Generating...";
 
   try {
-    const canvas = await generateGraphic(entries, {});
+    const canvas = await generateGraphic(entries); // No need to pass customFontFamily anymore
     top8GraphicArea.innerHTML = "";
     top8GraphicArea.appendChild(canvas);
 
