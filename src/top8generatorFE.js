@@ -1,6 +1,6 @@
 import "./index.css";
 import { cleanName } from "./util.js";
-import { getTop8 } from "./api.js";
+import { getTop8, getEventStats} from "./api.js";
 import { generateGraphic } from "./generategraphic.js";
 import { createHslFilterSection } from "./imagefilterFE.js";
 
@@ -181,13 +181,22 @@ fetchTop8Btn.addEventListener("click", async () => {
   startggInput.ariaInvalid = "false"; // Reset to valid if validation passes
 
   try {
-    const nodes = await getTop8(url);
+    const nodes = await getTop8(url); // This fetches the top 8 players
+    const stats = await getEventStats(url); // This fetches the attendee count
 
     if (nodes && nodes.length) {
       // render editable inputs + character dropdown for each player
       fetchTop8Btn.textContent = "Fetched!";
       container.innerHTML = "";
 
+      // Display event stats if available
+      // Assuming stats is now an object like { nonDQAttendees: 100, nonDQSets: 500 }
+      if (stats && (stats.nonDQAttendees !== null || stats.nonDQSets !== null)) {
+        const statsDiv = document.createElement("div");
+        statsDiv.className = "event-stats"; // Add a class for potential styling
+        statsDiv.textContent = `Active Attendees: ${stats.nonDQAttendees ?? 'N/A'}, Non-DQ Sets: ${stats.nonDQSets ?? 'N/A'}`;
+        container.appendChild(statsDiv);
+      }
       // load persisted cache (player name -> character)
       let cache = {};
       try {
