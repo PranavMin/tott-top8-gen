@@ -194,7 +194,7 @@ fetchTop8Btn.addEventListener("click", async () => {
       if (stats && (stats.nonDQAttendees !== null || stats.nonDQSets !== null)) {
         const statsDiv = document.createElement("div");
         statsDiv.className = "event-stats"; // Add a class for potential styling
-        statsDiv.textContent = `Active Attendees: ${stats.nonDQAttendees ?? 'N/A'}, Non-DQ Sets: ${stats.nonDQSets ?? 'N/A'}`;
+        statsDiv.textContent = `Attendees: ${stats.nonDQAttendees ?? 'N/A'}, Sets: ${stats.nonDQSets ?? 'N/A'}`;
         container.appendChild(statsDiv);
       }
       // load persisted cache (player name -> character)
