@@ -71,10 +71,10 @@ export async function getEventStats(eventUrl) {
 
   // The eventUrl is in the format "tournament/TOURNAMENT_SLUG/event/EVENT_SLUG"
   // We need to extract the tournament slug and the event slug part for matching.
-  const fullEventSlug = eventUrl;
+  const fullEventSlug = eventSlug;
   const tournamentSlugMatch = fullEventSlug.match(/tournament\/([^\/]+)/);
   const tournamentSlug = tournamentSlugMatch ? tournamentSlugMatch[1] : null;
-  const eventSlugPart = fullEventSlug.split('/event/')[1]; // e.g., "melee-singles"
+  const eventSlugPart = fullEventSlug.split('/event/')[1]?.split('/')[0]; // e.g., "melee-singles"
 
   if (!tournamentSlug || !eventSlugPart) {
     throw new Error("Invalid event URL format. Could not extract tournament or event slug from: " + fullEventSlug);
