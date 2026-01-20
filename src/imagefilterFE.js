@@ -18,19 +18,45 @@ export function createHslFilterSection() {
   hslFieldset.role = "group";
   hslSection.appendChild(hslFieldset);
 
-  // Image input
-  const imageInput = document.createElement("input");
-  imageInput.id = "hsl-image-input";
-  imageInput.type = "file";
-  imageInput.accept = "image/*";
-  hslFieldset.appendChild(imageInput);
+  // Paste Box (replaces file input)
+  const pasteBox = document.createElement("div");
+  pasteBox.id = "hsl-paste-box";
+  pasteBox.textContent = "Click to Paste Image or Ctrl+V";
+  pasteBox.className = "hsl-paste-box";
+  // Basic styling for the paste box
+  pasteBox.style.border = "2px dashed #ccc";
+  pasteBox.style.borderRadius = "8px";
+  pasteBox.style.padding = "20px";
+  pasteBox.style.textAlign = "center";
+  pasteBox.style.minHeight = "150px";
+  pasteBox.style.display = "flex";
+  pasteBox.style.alignItems = "center";
+  pasteBox.style.justifyContent = "center";
+  pasteBox.style.marginBottom = "16px";
+  pasteBox.style.cursor = "pointer";
+  pasteBox.style.backgroundColor = "#1b006358";
+  pasteBox.style.color = "#666";
+  hslFieldset.appendChild(pasteBox);
+
+  // Apply button
+  const applyHslBtn = document.createElement("button");
+  applyHslBtn.id = "apply-hsl-btn";
+  applyHslBtn.textContent = "Apply Filter";
+  applyHslBtn.style.display = "none";
+  applyHslBtn.style.backgroundColor = "#00895a";
+  applyHslBtn.style.color = "white";
+  applyHslBtn.style.margin = "0 auto";
+  hslFieldset.appendChild(applyHslBtn);
 
   // Background removal checkbox
   const bgRemovalLabel = document.createElement("label");
-  bgRemovalLabel.style.display = "flex";
+  bgRemovalLabel.style.display = "none";
   bgRemovalLabel.style.alignItems = "center";
+  bgRemovalLabel.style.justifyContent = "center";
   bgRemovalLabel.style.gap = "8px";
   bgRemovalLabel.style.cursor = "pointer";
+  bgRemovalLabel.style.margin = "8px auto";
+  bgRemovalLabel.style.width = "fit-content";
 
   const bgRemovalCheckbox = document.createElement("input");
   bgRemovalCheckbox.id = "remove-bg-checkbox";
@@ -44,13 +70,6 @@ export function createHslFilterSection() {
 
   hslFieldset.appendChild(bgRemovalLabel);
 
-  // Apply button
-  const applyHslBtn = document.createElement("button");
-  applyHslBtn.id = "apply-hsl-btn";
-  applyHslBtn.textContent = "Apply Filter";
-  applyHslBtn.style.display = "none";
-  hslFieldset.appendChild(applyHslBtn);
-
   // HSL result area
   const hslResultArea = document.createElement("div");
   hslResultArea.id = "hsl-result-area";
@@ -61,33 +80,49 @@ export function createHslFilterSection() {
   // ============================================
 
   let currentImageFile = null;
-  let currentPreviewUrl = null; // To store the URL for the current preview image
+  let sourcePreviewUrl = null; // URL for the input image preview
+  let resultPreviewUrl = null; // URL for the filtered result image
 
-  // Handle image file selection
-  imageInput.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      if (currentPreviewUrl) revokeBlobUrl(currentPreviewUrl); // Revoke previous preview URL
-      currentImageFile = file;
-      applyHslBtn.style.display = "block";
-      hslResultArea.innerHTML = "";
-    } else {
-      currentImageFile = null;
-      applyHslBtn.style.display = "none";
-      hslResultArea.innerHTML = "";
+  const handleFileSelection = (file) => {
+    if (sourcePreviewUrl) revokeBlobUrl(sourcePreviewUrl);
+    
+    currentImageFile = file;
+    applyHslBtn.style.display = "block";
+    bgRemovalLabel.style.display = "flex";
+    
+    // Clear previous result
+    hslResultArea.innerHTML = "";
+    if (resultPreviewUrl) {
+      revokeBlobUrl(resultPreviewUrl);
+      resultPreviewUrl = null;
     }
 
-    if (currentImageFile) {
-      hslResultArea.innerText = "Image selected from file input.";
-      const previewImg = document.createElement("img");
-      currentPreviewUrl = URL.createObjectURL(currentImageFile);
-      previewImg.src = currentPreviewUrl;
-      previewImg.className = "hsl-preview-image";
-      previewImg.style.maxWidth = "200px"; // Smaller thumbnail
-      previewImg.style.maxHeight = "200px";
-      previewImg.style.display = "block";
-      previewImg.style.marginTop = "8px";
-      hslResultArea.appendChild(previewImg);
+    // Show preview in paste box
+    pasteBox.innerHTML = "";
+    const previewImg = document.createElement("img");
+    sourcePreviewUrl = URL.createObjectURL(file);
+    previewImg.src = sourcePreviewUrl;
+    previewImg.style.maxWidth = "100%";
+    previewImg.style.maxHeight = "300px";
+    previewImg.style.display = "block";
+    pasteBox.appendChild(previewImg);
+  };
+
+  // Handle click to paste from clipboard
+  pasteBox.addEventListener("click", async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        const imageType = item.types.find((type) => type.startsWith("image/"));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          handleFileSelection(blob);
+          return;
+        }
+      }
+      alert("No image found in clipboard.");
+    } catch (err) {
+      alert("Failed to read clipboard. Please allow permissions or use Ctrl+V.");
     }
   });
 
@@ -98,24 +133,7 @@ export function createHslFilterSection() {
       if (items[i].type.startsWith("image/")) {
         const imageFile = items[i].getAsFile();
         if (imageFile) {
-          if (currentPreviewUrl) revokeBlobUrl(currentPreviewUrl); // Revoke previous preview URL
-          currentImageFile = imageFile;
-          applyHslBtn.style.display = "block";
-          hslResultArea.innerHTML = "";
-
-          // Display thumbnail and message
-          hslResultArea.innerText = "Image pasted from clipboard.";
-          const previewImg = document.createElement("img");
-          currentPreviewUrl = URL.createObjectURL(imageFile);
-          previewImg.src = currentPreviewUrl;
-          previewImg.className = "hsl-preview-image";
-          previewImg.style.maxWidth = "200px"; // Smaller thumbnail
-          previewImg.style.maxHeight = "200px";
-          previewImg.style.display = "block";
-          previewImg.style.marginTop = "8px";
-          hslResultArea.appendChild(previewImg);
-
-          imageInput.value = ""; // Clear file input's visual state
+          handleFileSelection(imageFile);
           e.preventDefault(); // Prevent default paste behavior (e.g., pasting text)
           return; // Process only the first image found
         }
@@ -134,9 +152,9 @@ export function createHslFilterSection() {
     hslResultArea.innerHTML = "Applying filter...";
 
     // Revoke the current preview URL if it exists, as it's about to be replaced by the filtered image
-    if (currentPreviewUrl) {
-      revokeBlobUrl(currentPreviewUrl);
-      currentPreviewUrl = null; // Reset it
+    if (resultPreviewUrl) {
+      revokeBlobUrl(resultPreviewUrl);
+      resultPreviewUrl = null; // Reset it
     }
     try {
       // Fixed HSL values: Hue 24, Saturation 26
@@ -157,10 +175,10 @@ export function createHslFilterSection() {
 
       // Create image preview
       const previewImg = document.createElement("img");
-      currentPreviewUrl = getBlobUrl(filteredBlob); // Store the URL for the filtered image
-      previewImg.src = currentPreviewUrl;
+      resultPreviewUrl = getBlobUrl(filteredBlob); // Store the URL for the filtered image
+      previewImg.src = resultPreviewUrl;
       previewImg.className = "hsl-preview-image";
-      previewImg.style.maxWidth = "500px";
+      // previewImg.style.maxWidth = "500px";
       previewImg.style.marginTop = "16px";
       hslResultArea.appendChild(previewImg);
 
