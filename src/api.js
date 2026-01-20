@@ -80,54 +80,67 @@ export async function getEventStats(eventUrl) {
     throw new Error("Invalid event URL format. Could not extract tournament or event slug from: " + fullEventSlug);
   }
 
-  let allSets = [];
-  let currentPage = 1;
-  let totalPages = 1; // Initialize to 1 to ensure at least one request
-  const maxPagesToFetch = 10; // Limit to prevent excessive API calls for very large events (500 sets total)
+  const maxPagesToFetch = 10;
 
-  do {
+  const fetchPage = async (page) => {
     const res = await fetch("https://api.start.gg/gql/alpha", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ query, variables: { slug: tournamentSlug, page: currentPage } }),
+      body: JSON.stringify({ query, variables: { slug: tournamentSlug, page } }),
     });
-
     const json = await res.json();
     if (json.errors) {
-      console.error("GraphQL Errors:", json.errors);
-      throw new Error(json.errors.map((e) => e.message).join(", "));
+      console.error(`GraphQL Errors on page ${page}:`, json.errors);
+      return null;
     }
-    
-    const tournamentData = json.data?.tournament;
-    if (!tournamentData || !tournamentData.events) {
-      break; // No tournament or events found
-    }
+    return json;
+  };
 
-    // Find the specific event within the tournament's events array
-    const targetEvent = tournamentData.events.find(e => {
-      // Normalize event name to compare with the slug part from the input URL
-      const normalizedEventName = e.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const processResponse = (json) => {
+    const tournamentData = json?.data?.tournament;
+    if (!tournamentData?.events) return null;
+
+    const targetEvent = tournamentData.events.find((e) => {
+      const normalizedEventName = e.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
       return normalizedEventName === eventSlugPart;
     });
 
-    if (!targetEvent || !targetEvent.sets) {
-      console.warn(`Event with slug part '${eventSlugPart}' or its sets not found within tournament '${tournamentSlug}'.`);
-      break;
+    return targetEvent;
+  };
+
+  // Fetch page 1
+  let allSets = [];
+  const page1Json = await fetchPage(1);
+  const page1Event = processResponse(page1Json);
+
+  if (page1Event?.sets) {
+    allSets = allSets.concat(page1Event.sets.nodes || []);
+    const totalPages = page1Event.sets.pageInfo?.totalPages || 1;
+
+    // Fetch remaining pages in parallel
+    const promises = [];
+    for (let p = 2; p <= Math.min(totalPages, maxPagesToFetch); p++) {
+      promises.push(fetchPage(p));
     }
 
-    allSets = allSets.concat(targetEvent.sets.nodes || []);
-    totalPages = targetEvent.sets.pageInfo?.totalPages || 1;
-    currentPage++;
-
-    if (currentPage > maxPagesToFetch && currentPage <= totalPages) {
-      console.warn(`Reached maximum pages (${maxPagesToFetch}) for sets. Not all sets may be fetched.`);
-      break;
-    }
-
-  } while (currentPage <= totalPages);
+    const results = await Promise.all(promises);
+    results.forEach((json) => {
+      const event = processResponse(json);
+      if (event?.sets?.nodes) {
+        allSets = allSets.concat(event.sets.nodes);
+      }
+    });
+  } else {
+    console.warn(
+      `Event with slug part '${eventSlugPart}' or its sets not found within tournament '${tournamentSlug}'.`
+    );
+  }
 
   // Calculate unique number of players that didn't DQ out (from non-DQ sets)
   const nonDQEntrantIds = new Set();
@@ -152,4 +165,3 @@ export async function getEventStats(eventUrl) {
   
   return { nonDQAttendees, nonDQSets: nonDQSetsCount };
 }
-       

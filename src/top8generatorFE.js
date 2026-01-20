@@ -42,11 +42,11 @@ const ROBOTO_SLAB_FONT_FAMILY = "'Roboto Slab'";
 const fontLoadPromise = document.fonts.load(`44px ${ROBOTO_SLAB_FONT_FAMILY}`);
 
 // FIELDSET
-const fetTop8Fieldset = document.createElement("fieldset");
-fetTop8Fieldset.role = "group";
-fetTop8Fieldset.id = "top8-fieldset";
-fetTop8Fieldset.className = "top8-fieldset";
-document.body.appendChild(fetTop8Fieldset);
+const fetchTop8Fieldset = document.createElement("fieldset");
+fetchTop8Fieldset.role = "group";
+fetchTop8Fieldset.id = "top8-fieldset";
+fetchTop8Fieldset.className = "top8-fieldset";
+document.body.appendChild(fetchTop8Fieldset);
 
 // INPUT - Start GG event URL
 const startggInput = document.createElement("input");
@@ -54,13 +54,13 @@ startggInput.id = "startgg-input";
 startggInput.placeholder =
   "Paste start.gg event URL or tournament/.../event/...";
 startggInput.value = STARTGG_URL; // prefill with example
-fetTop8Fieldset.appendChild(startggInput);
+fetchTop8Fieldset.appendChild(startggInput);
 
 // BUTTON - Fetch Top 8
 const fetchTop8Btn = document.createElement("button");
 fetchTop8Btn.id = "fetch-top8-btn";
 fetchTop8Btn.textContent = "Fetch";
-fetTop8Fieldset.appendChild(fetchTop8Btn);
+fetchTop8Fieldset.appendChild(fetchTop8Btn);
 
 // WARN / STATUS AREA and RESULTS CONTAINER
 const container = document.createElement("div");
